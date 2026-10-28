@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Industrial IoT Telemetry Dashboard</title>
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Your Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-[#090D16] text-slate-100 flex min-h-screen font-sans">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      ⚙ SMART MONITOR
+    </div>
+    <div class="nav-item active" data-target="topbar">
+      📊 Dashboard
+    </div>
+    <div class="nav-item" data-target="liveChartSection">
+      📈 Live Monitoring
+    </div>
+    <div class="nav-item" data-target="tableSection">
+      🗂 Sensor Data
+    </div>
+    <div class="nav-item" data-target="alertSection">
+      🔔 System Alerts
+    </div>
+    <div class="nav-item" data-target="machineStatusSection">
+      🏭 Machine Status
+    </div>
+  </nav>
+
+  <!-- =====================================================
+       MAIN CONTENT CONTAINER
+  ====================================================== -->
+  <div class="main flex-1 min-w-0 p-6 md:p-8 bg-[#0D1322]">
+
+    <!-- TOP BAR -->
+    <header class="topbar flex justify-between items-start flex-wrap gap-4 pb-4 border-b border-slate-800 mb-6" id="topbar">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold text-slate-100 tracking-wide flex items-center gap-2">
+          Industrial SW-420, DHT11 & IR Telemetry Feed
+        </h1>
+        <p class="subtitle text-xs text-slate-400 mt-1">
+          Real-Time ThingSpeak IoT Industrial Machine Analytics
+        </p>
+      </div>
+
+      <div class="status-block flex items-center gap-3 flex-wrap">
+        <!-- Demo Mode Toggle -->
+        <div class="flex items-center gap-2 bg-[#141C2E] px-3 py-1.5 rounded-lg border border-slate-800">
+          <span class="text-xs font-semibold text-slate-300">Demo Simulation</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="demoToggle" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+          </label>
+        </div>
+
+        <!-- Audio Alarm Toggle -->
+        <button id="audioToggle" class="bg-[#141C2E] hover:bg-slate-800 p-2 rounded-lg border border-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition" title="Toggle Sound Alarms">
+          🔔 <span id="audioStatusText">Sound Off</span>
+        </button>
+
+        <div class="text-right">
+          <div class="conn flex items-center gap-1.5 justify-end text-emerald-400 font-semibold text-xs mb-0.5">
+            <span class="dot blink inline-block w-2 h-2 rounded-full bg-emerald-400 shadow-sm" id="connectionDot"></span>
+            <span id="connectionText">Connecting...</span>
+          </div>
+          <div id="clock" class="text-[11px] text-slate-400 font-mono">--:--:--</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Sidebar Toggle -->
+    <button class="sidebar-toggle mb-4 inline-block md:hidden bg-[#141C2E] border border-slate-800 text-cyan-400 px-3 py-1.5 rounded-lg font-semibold cursor-pointer text-xs" id="sidebarToggle">
+      ☰ Menu Navigation
+    </button>
+
+    <!-- ===================================================
+         ANOMALY ALERT BANNER
+    ==================================================== -->
+    <div id="anomalyBanner" class="bg-rose-950/80 border border-rose-800 text-rose-200 px-4 py-3 rounded-xl mb-6 shadow-lg flex items-center justify-between flex-wrap gap-3 hidden">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">⚠️</span>
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-rose-400">MACHINE ANOMALY ALERT</h3>
+          <p class="text-xs text-rose-200 mt-0.5" id="anomalyText">Sensor threshold exceeded! Inspect machine immediately.</p>
+        </div>
+      </div>
+      <button id="acknowledgeBtn" class="bg-rose-900 hover:bg-rose-800 text-rose-100 text-xs font-semibold px-4 py-1.5 rounded-lg border border-rose-700 transition">
+        Acknowledge
+      </button>
+    </div>
+
+    <!-- ===================================================
+         SENSOR CARDS GRID
+    ==================================================== -->
+    <section class="cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- TEMPERATURE CARD -->
+      <div class="card bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 to-orange-500"></div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="label text-xs font-bold tracking-wider text-slate-400 flex items-center gap-1.5 uppercase">🌡 TEMPERATURE</span>
+          <span class="status-pill normal text-[10px] px-2.5 py-0.5 rounded-full font-extrabold text-emerald-400 bg-emerald-950/80 border border-emerald-800" id="tempPill">NORMAL</span>
+        </div>
+        <div class="value text-4xl font-extrabold text-white tracking-tight my-2" id="tempVal">29.9 °C</div>
+        <div class="mt-4">
+          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div id="tempBar" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 35%;"></div>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-[11px] text-slate-400">
+            <span>Current Reading</span>
+            <span>Threshold: &gt; 50.0 °C</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HUMIDITY CARD -->
+      <div class="card bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="label text-xs font-bold tracking-wider text-slate-400 flex items-center gap-1.5 uppercase">💧 HUMIDITY</span>
+          <span class="status-pill normal text-[10px] px-2.5 py-0.5 rounded-full font-extrabold text-emerald-400 bg-emerald-950/80 border border-emerald-800" id="humPill">NORMAL</span>
+        </div>
+        <div class="value text-4xl font-extrabold text-white tracking-tight my-2" id="humVal">57.4 %</div>
+        <div class="mt-4">
+          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div id="humBar" class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: 57%;"></div>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-[11px] text-slate-400">
+            <span>Current Reading</span>
+            <span>Optimal: 20% - 85%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIBRATION CARD (SW-420) -->
+      <div class="card bg-[#141C2E]/90 border border-amber-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-500"></div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="label text-xs font-bold tracking-wider text-slate-400 flex items-center gap-1.5 uppercase">〽 SW-420 VIBRATION</span>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="vibLed"></span>
+            <span class="status-pill normal text-[10px] px-2.5 py-0.5 rounded-full font-extrabold text-emerald-400 bg-emerald-950/80 border border-emerald-800" id="vibPill">NORMAL</span>
+          </div>
+        </div>
+        <div class="value text-3xl font-extrabold text-white tracking-tight my-2" id="vibVal">NORMAL</div>
+        <div class="foot mt-4 text-xs text-slate-400 flex items-center gap-2" id="vibText">
+          No vibration detected
+        </div>
+      </div>
+
+      <!-- IR BEAM SENSOR CARD -->
+      <div class="card bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="label text-xs font-bold tracking-wider text-slate-400 flex items-center gap-1.5 uppercase">📡 IR BEAM SENSOR</span>
+          <span class="status-pill normal text-[10px] px-2.5 py-0.5 rounded-full font-extrabold text-emerald-400 bg-emerald-950/80 border border-emerald-800" id="irPill">NORMAL</span>
+        </div>
+        <div class="value text-3xl font-extrabold text-white tracking-tight my-2" id="irVal">CLEAR</div>
+        <div class="foot mt-4 text-xs text-slate-400 flex items-center gap-2" id="irText">
+          No object detected in beam path
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================================================
+         MACHINE HEALTH SUMMARY CARD
+    ==================================================== -->
+    <section id="machineStatusSection" class="panel bg-gradient-to-r from-[#141C2E] to-[#1A253F] border border-slate-800 rounded-2xl p-6 mb-6 shadow-xl flex flex-wrap gap-6 items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">OVERALL MACHINE HEALTH</h2>
+        <div class="big text-2xl font-black text-emerald-400 flex items-center gap-2.5">
+          <span class="inline-block w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50" id="machDot"></span>
+          <span id="machState">MACHINE NORMAL</span>
+        </div>
+      </div>
+      <div class="msub flex flex-wrap gap-6 text-xs text-slate-400">
+        <span>Temp: <b id="mTemp" class="text-white font-semibold">--</b></span>
+        <span>Humidity: <b id="mHum" class="text-white font-semibold">--</b></span>
+        <span>Vibration: <b id="mVib" class="text-white font-semibold">--</b></span>
+        <span>IR Status: <b id="mIr" class="text-white font-semibold">--</b></span>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         LIVE TELEMETRY CHART
+    ==================================================== -->
+    <section id="liveChartSection" class="panel bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 mb-6 shadow-xl">
+      <h2 class="text-sm font-bold text-slate-200 mb-4 flex items-center justify-between flex-wrap gap-3">
+        <span class="flex items-center gap-2">📈 Live Sensor Telemetry Feed</span>
+        <div class="tabs flex gap-2 flex-wrap" id="tabs">
+          <button class="tab-btn active text-xs px-3 py-1.5 rounded-lg border border-cyan-500 bg-cyan-500 text-slate-950 font-bold transition" data-key="temperature">Temperature</button>
+          <button class="tab-btn text-xs px-3 py-1.5 rounded-lg border border-slate-800 bg-[#0D1322] text-slate-300 hover:bg-slate-800 transition" data-key="humidity">Humidity</button>
+          <button class="tab-btn text-xs px-3 py-1.5 rounded-lg border border-slate-800 bg-[#0D1322] text-slate-300 hover:bg-slate-800 transition" data-key="vibration">Vibration</button>
+          <button class="tab-btn text-xs px-3 py-1.5 rounded-lg border border-slate-800 bg-[#0D1322] text-slate-300 hover:bg-slate-800 transition" data-key="ir">IR Sensor</button>
+        </div>
+      </h2>
+      <div class="chart-wrap relative h-[320px] bg-[#0D1322]/80 rounded-xl p-3 border border-slate-800/60">
+        <canvas id="liveChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         DATA LOG TABLE & SYSTEM ALERTS
+    ==================================================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- SENSOR TABLE LOG -->
+      <section id="tableSection" class="panel lg:col-span-2 bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">🗂 Historical Data Log</h2>
+          <button id="exportCsvBtn" class="bg-[#0D1322] hover:bg-cyan-950 text-cyan-400 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+            📥 Export CSV
+          </button>
+        </div>
+        <div class="table-wrap overflow-x-auto max-h-[350px] overflow-y-auto">
+          <table class="w-full border-collapse text-xs text-left min-w-[500px]">
+            <thead class="sticky top-0 bg-[#090D16] text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="p-3 font-semibold">Timestamp</th>
+                <th class="p-3 font-semibold">Temp (°C)</th>
+                <th class="p-3 font-semibold">Humidity (%)</th>
+                <th class="p-3 font-semibold">Vibration</th>
+                <th class="p-3 font-semibold">IR Sensor</th>
+                <th class="p-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-800/50"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SYSTEM ALERTS -->
+      <section id="alertSection" class="panel bg-[#141C2E]/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">🔔 Event Alerts</h2>
+        <div id="alertList" class="space-y-2.5 max-h-[350px] overflow-y-auto">
+          <div class="alert-item text-xs text-slate-400 py-2 border-b border-slate-800/50 flex items-center gap-2">
+            🟢 Initializing system telemetry...
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- JavaScript -->
+  <script src="script.js"></script>
+</body>
+
+</html>
