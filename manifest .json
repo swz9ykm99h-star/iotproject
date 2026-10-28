@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "IoT Machine Monitor",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "IoT Monitor",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "com.iot.machinemonitor",
+  "description": "Real-time industrial machine telemetry monitoring app for ThingSpeak sensors."
+}
