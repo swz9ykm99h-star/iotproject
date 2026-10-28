@@ -1,13 +1,30 @@
+
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "IoT Machine Monitor",
-  "orientation": "any",
-  "scope": "/",
+  "name": "IoT Monitor",
   "short_name": "IoT Monitor",
-  "start_url": "/",
-  "theme_color": "#ffffff",
-  "id": "com.iot.machinemonitor",
-  "description": "Real-time industrial machine telemetry monitoring app for ThingSpeak sensors."
+  "description": "Real-time industrial machine telemetry monitoring app for ThingSpeak sensors.",
+  "start_url": "/iotproject/",
+  "scope": "/iotproject/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "categories": [
+    "utilities",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/iotproject/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/iotproject/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
